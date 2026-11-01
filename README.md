@@ -83,8 +83,47 @@ python scripts/04_analyze.py        # writes plots, summary CSVs, results/recomm
 ## Limitations (summary; details in report)
 CodeCarbon gives estimates, not metered power; `local[N]` has no network; a 1M-row subset (2.2% of the small Criteo set) means fixed overheads weigh heavily at 8-16 cores; one model family; anonymised features prevent group-fairness auditing.
 
+# Criteo Data Pipeline (Part 2 of 3)
+
+Data preparation for the project *Distributed Training and Its Carbon Footprint*. It turns the raw Criteo click logs into the Parquet files the scaling experiments use. Core experiment and results (Part 1): https://github.com/samarth2006-28/Big-Data-
+
+```
+scripts/00_generate_synthetic.py   synthetic Criteo-format data (pipeline testing only)
+scripts/01_prepare_data.py         TSV -> Parquet, adds a stable row id `rid`
+scripts/01b_make_subset.py         deterministic row subset (same rows every time)
+src/common.py                      Criteo schema + Spark session helper
+docs/data_card.md                  data card
+```
+
+## Setup
+Python 3.10+ and **Java 11/17/21**.
+```bash
+pip install -r requirements.txt
+```
+On Windows, if your computer name contains an underscore, set `SPARK_LOCAL_HOSTNAME=localhost` first.
+
+## Quick test (synthetic data, about 1 minute)
+```bash
+python scripts/00_generate_synthetic.py --rows 50000 --out data/raw/synth.tsv
+python scripts/01_prepare_data.py --input data/raw/synth.tsv --out data/parquet/criteo
+```
+
+## Real data
+1. Download `train.txt` (Criteo Display Advertising Challenge, 45,840,617 rows, 11.1 GB) from https://www.kaggle.com/datasets/mrkmakr/criteo-dataset into `data/raw/`. Read the licence terms on the download page.
+2. Convert to Parquet (about 3.1 GB):
+   ```bash
+   python scripts/01_prepare_data.py --input data/raw/train.txt --out data/parquet/criteo_full --partitions 64
+   ```
+3. Make the 1M-row subset used for all reported results:
+   ```bash
+   python scripts/01b_make_subset.py --data data/parquet/criteo_full --rows 1000000 --out data/parquet/criteo_1m
+   ```
+
+The subset is chosen by hashing `rid`, so everyone gets exactly the same 1,000,612 rows. Raw data is never committed (`data/` is git-ignored).
+
 ## Responsible use and data
 Public anonymised data only, no re-identification attempted, raw data not committed. See `MODEL_CARD.md`.
 
 ## Team and credits
 Course: Big Data Systems & Responsible AI Engineering (BDSRAE), Level 3. Criteo for the dataset; Apache Spark; CodeCarbon.
+

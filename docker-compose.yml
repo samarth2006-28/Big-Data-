@@ -1,0 +1,32 @@
+# Real Spark standalone cluster on one host. Scale workers to change cluster size:
+#   docker compose up -d --build --scale worker=4
+# Each worker offers exactly 1 core, so `--scale worker=N` == N cores.
+# NOTE: not CI-tested in the authoring environment (no Docker daemon) - run `make cluster-up` and
+# check http://localhost:8080 shows N workers before trusting results.
+x-spark: &spark
+  build: { context: ., dockerfile: docker/Dockerfile }
+  volumes: ["./:/app"]          # same path on every node -> executors can read /app/data/parquet
+  networks: [sparknet]
+
+services:
+  spark-master:
+    <<: *spark
+    hostname: spark-master
+    command: spark-class org.apache.spark.deploy.master.Master --host spark-master --port 7077 --webui-port 8080
+    ports: ["8080:8080", "7077:7077"]
+
+  worker:
+    <<: *spark
+    command: spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077 --cores 1 --memory 2g
+    depends_on: [spark-master]
+
+  driver:
+    <<: *spark
+    hostname: driver
+    environment:
+      SPARK_DRIVER_HOST: driver
+    command: sleep infinity
+    depends_on: [spark-master]
+
+networks:
+  sparknet: {}

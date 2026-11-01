@@ -4,7 +4,7 @@
 
 How does training time, cost, energy and carbon change as we add machines? We train a click-prediction model on the **Criteo** ad logs with **Apache Spark** at several cluster sizes, measure **strong and weak scaling**, estimate **energy and CO2e with CodeCarbon**, and find the point where **adding machines stops being worthwhile**.
 
-This repository is **Part 1 of 3**: the core experiment, analysis and results. Part 2 (data pipeline) and Part 3 (Docker cluster + results notebook) are maintained separately by the team.
+This repository holds the whole project: the core experiment, analysis and results (Part 1). Part 2 (data pipeline) and Part 3 (Docker cluster + results notebook) are also included: see [docs/cluster_and_notebook.md](docs/cluster_and_notebook.md). The Docker cluster is optional and was not used for the reported results.
 
 ## Key results (real Criteo data, 1M-row subset, medians of 3 runs)
 

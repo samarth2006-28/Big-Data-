@@ -1,0 +1,11 @@
+data/raw/
+data/parquet/
+spark-warehouse/
+metastore_db/
+derby.log
+__pycache__/
+.ipynb_checkpoints/
+results/smoke*
+emissions.csv
+*.pyc
+.venv/
